@@ -3,6 +3,13 @@
     <color name="tfe_color_primary">#ffa800</color>
     <color name="tfe_color_primary_dark">#ff6f00</color>
     <color name="tfe_color_accent">#425066</color>
+    <color name="black">#000000</color>
+    <color name="teal_700">#00796B</color>
+    <color name="teal_200">#80CBC4</color>
+    <color name="white">#FFFFFF</color>
+    <color name="purple_700">#7B1FA2</color>
+    <color name="purple_500">#9C27B0</color>
+    <color name="purple_200">#CE93D8</color>
 
     <color name="tfe_semi_transparent">#66000000</color>
 </resources>
