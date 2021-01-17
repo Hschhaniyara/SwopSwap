@@ -19,6 +19,7 @@ package org.tensorflow.lite.examples.detection;
 import android.Manifest;
 import android.app.Fragment;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;
@@ -29,26 +30,36 @@ import android.media.Image;
 import android.media.Image.Plane;
 import android.media.ImageReader;
 import android.media.ImageReader.OnImageAvailableListener;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.StrictMode;
 import android.os.Trace;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+
+import android.provider.MediaStore;
 import android.util.Size;
 import android.view.Surface;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+
+import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import org.tensorflow.lite.examples.detection.env.ImageUtils;
 import org.tensorflow.lite.examples.detection.env.Logger;
@@ -63,6 +74,7 @@ public abstract class CameraActivity extends AppCompatActivity
   private static final int PERMISSIONS_REQUEST = 1;
 
   private static final String PERMISSION_CAMERA = Manifest.permission.CAMERA;
+  private static final String PERMISSION_STORAGE = Manifest.permission.WRITE_EXTERNAL_STORAGE;
   protected int previewWidth = 0;
   protected int previewHeight = 0;
   private boolean debug = false;
@@ -76,6 +88,7 @@ public abstract class CameraActivity extends AppCompatActivity
   private Runnable postInferenceCallback;
   private Runnable imageConverter;
 
+
   private LinearLayout bottomSheetLayout;
   private LinearLayout gestureLayout;
   private BottomSheetBehavior<LinearLayout> sheetBehavior;
@@ -85,6 +98,10 @@ public abstract class CameraActivity extends AppCompatActivity
   private ImageView plusImageView, minusImageView;
   private SwitchCompat apiSwitchCompat;
   private TextView threadsTextView;
+
+  private Button photoButton;
+  public static int index = 0;
+  public final String directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/TensorFlowCamera/";
 
   @Override
   protected void onCreate(final Bundle savedInstanceState) {
@@ -111,6 +128,10 @@ public abstract class CameraActivity extends AppCompatActivity
     gestureLayout = findViewById(R.id.gesture_layout);
     sheetBehavior = BottomSheetBehavior.from(bottomSheetLayout);
     bottomSheetArrowImageView = findViewById(R.id.bottom_sheet_arrow);
+    photoButton = findViewById(R.id.photoButton);
+
+    StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+    StrictMode.setVmPolicy(builder.build());
 
     ViewTreeObserver vto = gestureLayout.getViewTreeObserver();
     vto.addOnGlobalLayoutListener(
@@ -130,7 +151,7 @@ public abstract class CameraActivity extends AppCompatActivity
         });
     sheetBehavior.setHideable(false);
 
-    sheetBehavior.setBottomSheetCallback(
+    sheetBehavior.addBottomSheetCallback(
         new BottomSheetBehavior.BottomSheetCallback() {
           @Override
           public void onStateChanged(@NonNull View bottomSheet, int newState) {
@@ -522,6 +543,22 @@ public abstract class CameraActivity extends AppCompatActivity
       threadsTextView.setText(String.valueOf(numThreads));
       setNumThreads(numThreads);
     }
+  }
+
+  public void CameraButton(View view) {
+    index++;
+    String file = directory + index + ".jpg";
+    File newFile = new File(file);
+
+    try {
+      newFile.createNewFile();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    Uri outputFileUri = Uri.fromFile(newFile);
+    Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+    cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri);
   }
 
   protected void showFrameInfo(String frameInfo) {
